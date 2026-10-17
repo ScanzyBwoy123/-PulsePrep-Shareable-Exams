@@ -325,7 +325,5 @@
 
     return true;
   }
-}
-  }
   init();
 })();
