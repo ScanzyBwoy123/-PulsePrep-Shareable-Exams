@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102b50">
+  <meta name="description" content="Create, share and practise nursing multiple-choice exams.">
+  <title>PulsePrep Shareable Exams</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="./" aria-label="PulsePrep Shareable Exams home">
+    <span class="brandmark">P+</span><span><strong>PulsePrep</strong><small>SHAREABLE EXAMS</small></span>
+  </a>
+  <span class="practice-tag">Practice edition</span>
+</header>
+<main class="shell">
+  <section class="hero">
+    <div><p class="eyebrow">NURSING KNOWLEDGE • YOUR PACE</p><h1>Create exams.<br><span>Build confidence.</span></h1>
+    <p class="hero-copy">Create nursing practice exams, challenge your knowledge, and learn from every answer.</p></div>
+    <div class="hero-art" aria-hidden="true"><span>＋</span><b>✓</b><i>♡</i></div>
+  </section>
+  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+  <section id="builderView">
+    <div class="section-heading"><div><p class="eyebrow">EXAM WORKSPACE</p><h2>Exam builder</h2><p class="muted">Drafts are saved in this browser only. Export a backup before changing devices.</p></div>
+      <button id="newExamBtn" class="btn btn-light">＋ New exam</button></div>
+    <div class="workspace">
+      <aside class="panel sidebar">
+        <h3>Exam details</h3>
+        <label>Examination title<input id="examTitle" maxlength="120" value="Nursing Practice Exam" placeholder="e.g. Fluid &amp; Electrolytes"></label>
+        <label>Subject<input id="examSubject" maxlength="100" value="Medical-Surgical Nursing" placeholder="Nursing subject"></label>
+        <label>Topic<input id="examTopic" maxlength="120" placeholder="e.g. Fluid balance"></label>
+        <label>Difficulty<select id="examDifficulty"><option>Mixed</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label>
+        <label>Time limit (minutes)<input id="examDuration" type="number" min="0" max="300" value="0"><small>Use 0 for no time limit.</small></label>
+        <label>Instructions<textarea id="examInstructions" rows="3" maxlength="1000">Choose the single best answer for each question. Review your answers before submitting.</textarea></label>
+        <label>Description (optional)<textarea id="examDescription" rows="2" maxlength="500" placeholder="Short description"></textarea></label>
+        <div class="stack"><button id="saveDraftBtn" class="btn btn-primary">Save draft</button><button id="loadDraftBtn" class="btn btn-light">Load saved draft</button><button id="clearDraftBtn" class="btn btn-danger-light">Clear saved draft</button></div>
+      </aside>
+      <div class="maincolumn">
+        <section class="panel">
+          <div class="panel-title"><div><h3>Questions <span id="questionCount" class="count">0</span></h3><p class="muted">Four distinct options and one correct answer per question.</p></div><button id="addQuestionBtn" class="btn btn-primary">＋ Add question</button></div>
+          <div id="questionList" class="question-list"></div>
+          <div id="emptyQuestions" class="empty"><div class="empty-icon">✎</div><h3>Start with your first question</h3><p>Add a question, four choices, the correct answer and an explanation.</p><button id="emptyAddBtn" class="btn btn-primary">Add first question</button></div>
+        </section>
+        <section class="panel tools-panel"><h3>Preview, share &amp; export</h3><p class="muted">Validate the exam before sharing. Share links include answers and are for practice only.</p>
+          <div class="action-grid"><button id="previewBtn" class="btn btn-light">Preview exam</button><button id="shareBtn" class="btn btn-primary">Create share link</button><button id="downloadBtn" class="btn btn-light">Download standalone HTML</button><button id="exportBtn" class="btn btn-light">Export exam JSON</button><label class="btn btn-light import-label">Import exam JSON<input id="importFile" type="file" accept=".json,application/json" hidden></label></div>
+          <div id="shareArea" class="share-area" hidden><label for="shareUrl">Shareable practice link</label><textarea id="shareUrl" rows="3" readonly></textarea><button id="copyLinkBtn" class="btn btn-primary">Copy link</button><p id="shareHint" class="muted"></p></div>
+        </section>
+        <section class="panel ai-panel"><div class="ai-icon">✦</div><div><h3>AI question generation</h3><p class="muted">AI is not configured until a server-side endpoint and secret key are set up. Manual exam creation and practice work without AI.</p>
+          <div class="ai-form"><label>Subject<input id="aiSubject" maxlength="100" placeholder="e.g. Pharmacology"></label><label>Topic<input id="aiTopic" maxlength="160" placeholder="e.g. Analgesics and antibiotics"></label>
+          <div class="ai-fields"><label>Number of questions<select id="aiCount"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></label><label>Difficulty<select id="aiDifficulty"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option></select></label></div>
+          <label>Question style<select id="aiStyle"><option>Direct multiple-choice</option><option>Clinical scenario</option><option>NCLEX-style practice</option></select></label>
+          <label>Explanation depth<select id="aiDepth"><option>Brief</option><option selected>Detailed</option><option>In-depth</option></select></label>
+          <label class="check-label"><input id="aiClinical" type="checkbox" checked> Prefer clinical scenarios where appropriate</label>
+          <button id="generateAiBtn" class="btn btn-primary">Generate questions</button><p id="aiStatus" class="muted" role="status">AI endpoint not yet checked.</p></div>
+          <p id="aiInfo" class="muted">Generated clinical questions must be reviewed and approved by a nursing educator before use.</p>
+        </div></section>
+      </div>
+    </div>
+  </section>
+
+  <section id="previewView" hidden><div class="section-heading"><div><p class="eyebrow">CHECK BEFORE SHARING</p><h2>Exam preview</h2><p class="muted">Correct answers are visible in creator preview.</p></div><button id="backToBuilderBtn" class="btn btn-light">← Back to builder</button></div><div id="previewContent" class="panel"></div></section>
+  <section id="studentView" hidden><div id="studentContent"></div></section>
+</main>
+<footer><strong>PulsePrep Shareable Exams</strong><p>Independent practice tool · Not an official, confidential, or cheat-proof examination system.</p><p>Clinical learning content should be checked against current guidance and your tutor's instructions.</p></footer>
+<script src="exam.js"></script><script src="app.js"></script>
+</body></html>
