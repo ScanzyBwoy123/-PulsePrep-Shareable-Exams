@@ -150,8 +150,7 @@
     status.textContent="Contacting the configured server-side AI endpoint…";
     const request={subject,topic,count:Number($("aiCount").value),difficulty:$("aiDifficulty").value,style:$("aiStyle").value,
       explanationDepth:$("aiDepth").value,clinicalScenarios:$("aiClinical").checked};
-    try {
-      const response=await fetch("/.netlify/functions/generate-questions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(request)});
+    try {const response=await fetch("https://pulseprep-shareable-exams-ai.ddangote701.workers.dev",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(request)});
       const data=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(data.error||("AI endpoint returned HTTP "+response.status+"."));
       if(!Array.isArray(data.questions)||!data.questions.length)throw new Error("The AI endpoint returned no valid questions.");
