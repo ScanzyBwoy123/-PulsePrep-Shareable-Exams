@@ -122,46 +122,40 @@
       } catch(error){message("Import failed: "+error.message,"error");}
     };reader.onerror=()=>message("The selected file could not be read.","error");reader.readAsText(file);
   }
-  function share() {
-    const exam=validate();if(!exam)return;
-    const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(exam))));
-    const url=location.href.split("#")[0]+"#exam="+encoded;
-    if(url.length>7000){message("This exam creates a very long link ("+url.length+" characters). Download the standalone HTML instead; the data was not truncated.","warn");return;}
-    $("shareUrl").value=url;$("shareArea").hidden=false;
-    $("shareHint").textContent="Practice only: answers and explanations are inside this link and may be inspected. Anyone with the link can open it. Results are not sent to a server.";
-    message("Practice link created. Test it in a private/incognito tab before sharing.");
-  }
-  async function copyLink() {
-    try {await navigator.clipboard.writeText($("shareUrl").value);message("Link copied to clipboard.");}
-    catch { $("shareUrl").focus();$("shareUrl").select();message("Automatic copying was blocked. The link is selected; use your device’s Copy command.","warn"); }
-  }
-  function standaloneHTML(exam) {
-    const payload=JSON.stringify(exam).replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026");
-    const title=esc(exam.title);
-    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>'+
-      'body{font:16px/1.6 system-ui,sans-serif;max-width:800px;margin:auto;padding:20px;color:#1b2c42}h1{color:#102b50}.card{border:1px solid #dce4ef;border-radius:14px;padding:18px;margin:16px 0}.choice{display:block;padding:12px;border:1px solid #ddd;border-radius:9px;margin:8px 0}.btn{background:#1768c4;color:white;border:0;border-radius:9px;padding:12px 17px;font-weight:bold}button{cursor:pointer}.good{color:#16834a}.bad{color:#c0393d}.muted{color:#64748b}.score{background:#eaf3ff;padding:15px;border-radius:12px}@media print{button{display:none}}'+
-      '</style></head><body><h1>'+title+'</h1><p>'+esc(exam.subject)+(exam.topic?' · '+esc(exam.topic):'')+' · '+exam.questions.length+' questions</p><p>'+esc(exam.instructions)+'</p><p class="muted">Standalone practice exam. Answers are included in this file.</p><div id="app"></div><script>const EXAM='+payload+';const root=document.getElementById("app");let answers=Array(EXAM.questions.length).fill(null),idx=0,done=false;function el(t,c,txt){const n=document.createElement(t);if(c)n.className=c;if(txt!==undefined)n.textContent=txt;return n}function render(){root.replaceChildren();if(done){let correct=0,answered=0;EXAM.questions.forEach((q,i)=>{if(Number.isInteger(answers[i])){answered++;if(answers[i]===q.correct)correct++}});let score=el("div","score");score.append(el("h2","","Score: "+correct+"/"+EXAM.questions.length+" ("+Math.round(correct/EXAM.questions.length*100)+"%)"));score.append(el("p","","Answered: "+answered+" · Incorrect: "+(answered-correct)+" · Unanswered: "+(EXAM.questions.length-answered)));root.append(score);EXAM.questions.forEach((q,i)=>{let d=el("div","card");d.append(el("h3","",(i+1)+". "+q.text));q.options.forEach((o,j)=>d.append(el("p",j===q.correct?"good":answers[i]===j?"bad":"",String.fromCharCode(65+j)+". "+o+(j===q.correct?" — Correct answer":answers[i]===j?" — Your answer":""))));if(q.explanation)d.append(el("p","","Explanation: "+q.explanation));if(q.reference)d.append(el("p","muted","Reference: "+q.reference));root.append(d)});let b=el("button","btn","Restart practice");b.onclick=()=>{answers=Array(EXAM.questions.length).fill(null);idx=0;done=false;render()};root.append(b);let p=el("button","btn","Print / Save PDF");p.style.marginLeft="8px";p.onclick=()=>print();root.append(p);return}const q=EXAM.questions[idx],d=el("div","card");d.append(el("h2","","Question "+(idx+1)+" of "+EXAM.questions.length));d.append(el("div","","Progress: "+Math.round((idx+1)/EXAM.questions.length*100)+"%"));d.append(el("h3","",q.text));q.options.forEach((o,j)=>{let label=el("label","choice"),input=document.createElement("input");input.type="radio";input.name="answer";input.checked=answers[idx]===j;input.onchange=()=>answers[idx]=j;label.append(input,document.createTextNode(" "+String.fromCharCode(65+j)+". "+o));d.append(label)});let nav=el("p","");let prev=el("button","btn","Previous");prev.disabled=idx===0;prev.onclick=()=>{idx--;render()};nav.append(prev);let next=el("button","btn",idx===EXAM.questions.length-1?"Submit exam":"Next");next.style.marginLeft="8px";next.onclick=()=>{if(idx===EXAM.questions.length-1){if(confirm("Submit your answers now?")){done=true;render()}}else{idx++;render()}};nav.append(next);d.append(nav);root.append(d);let jumps=el("div","card");jumps.append(el("strong","","Jump to question"));let row=el("p","");EXAM.questions.forEach((_,i)=>{let b=el("button","btn",String(i+1));b.style.margin="4px";b.style.background=answers[i]===null?"#eaf3ff":"#dff5e7";b.style.color="#102b50";b.onclick=()=>{idx=i;render()};row.append(b)});jumps.append(row);root.append(jumps)}render();<\\/script></body></html>';
-  }
-  function downloadStandalone(){const exam=validate();if(exam)download("pulseprep-practice-exam.html",standaloneHTML(exam),"text/html");}
-
-  async function generateAI() {
-    const status=$("aiStatus"),subject=$("aiSubject").value.trim(),topic=$("aiTopic").value.trim();
-    if(!subject||!topic){status.textContent="Enter both a subject and a topic first.";return;}
-    status.textContent="Contacting the configured server-side AI endpoint…";
-    const request={subject,topic,count:Number($("aiCount").value),difficulty:$("aiDifficulty").value,style:$("aiStyle").value,
-      explanationDepth:$("aiDepth").value,clinicalScenarios:$("aiClinical").checked};
-    try {const response=await fetch("https://pulseprep-shareable-exams-ai.ddangote701.workers.dev",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(request)});
-      const data=await response.json().catch(()=>({}));
-      if(!response.ok)throw new Error(data.error||("AI endpoint returned HTTP "+response.status+"."));
-      if(!Array.isArray(data.questions)||!data.questions.length)throw new Error("The AI endpoint returned no valid questions.");
-      const validated=data.questions.map(PulseExam.normalizeQuestion);
-      if(!confirm("AI generated "+validated.length+" question(s). Review them before use. Add them to this draft?")){status.textContent="Generated questions discarded.";return;}
-      const old=questions.length;questions.push(...validated);renderQuestions();status.textContent=validated.length+" questions added for your review. Edit or delete them before sharing.";
-      message((questions.length-old)+" AI-generated questions added. Review clinical accuracy and references before use.","warn");
-    } catch(error) {
-      status.textContent="AI generation unavailable: "+error.message+" Manual exam building remains available.";
+  async function share() {
+  const exam = validate();
+  if (!exam) return;
+  const button = $("shareBtn");
+  button.disabled = true;
+  button.textContent = "Creating link...";
+  try {
+    const response = await fetch(
+      "https://pulseprep-shareable-exams-ai.ddangote701.workers.dev/share",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(exam)
+      }
+    );
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.id) {
+      throw new Error(data.error || "Could not create the sharing link.");
     }
+    const url = location.href.split("#")[0] +
+      "#share=" + encodeURIComponent(data.id);
+    $("shareUrl").value = url;
+    $("shareArea").hidden = false;
+    $("shareHint").textContent =
+      "Your exam link is ready. Anyone with the link can open this exam. " +
+      "The link expires after 30 days.";
+    message("Short exam-sharing link created successfully.");
+  } catch (error) {
+    message("Could not create the link: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Create share link";
   }
+}
   function saveSession() {
     try {sessionStorage.setItem("pulseprep-student-session",JSON.stringify({key:location.hash.slice(0,200),answers,current,startedAt,deadline,submitted}));} catch {}
   }
