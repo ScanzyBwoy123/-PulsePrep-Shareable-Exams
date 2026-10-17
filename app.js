@@ -217,37 +217,115 @@
     restart.addEventListener("click",()=>{answers=Array(exam.questions.length).fill(null);current=0;startedAt=0;deadline=0;submitted=false;clearSession();renderStudent();});
     const printButton=document.createElement("button");printButton.className="btn btn-light";printButton.textContent="Print / Save PDF";printButton.addEventListener("click",()=>window.print());actions.append(restart,printButton);box.append(actions);root.append(box);
   }
-  function parseSharedExam() {
-    if(!location.hash.startsWith("#exam="))return false;
+  async function parseSharedExam() {
+  const hash = location.hash;
+
+  // Handle new short sharing links.
+  if (hash.startsWith("#share=")) {
+    showView("student");
+    $("studentContent").replaceChildren();
+
+    const loading = document.createElement("div");
+    loading.className = "panel";
+    loading.textContent = "Loading shared exam...";
+    $("studentContent").append(loading);
+
     try {
-      const encoded=location.hash.slice(6);if(encoded.length>700000)throw new Error("The link is too large.");
-      const data=decodeURIComponent(escape(atob(encoded)));studentExam=PulseExam.normalizeExam(JSON.parse(data));
-      answers=Array(studentExam.questions.length).fill(null);restoreSession();showView("student");renderStudent();if(deadline&&!submitted)startTimer();return true;
-    } catch {
-      showView("student");$("studentContent").replaceChildren();const panel=document.createElement("div");panel.className="panel";
-      const h=document.createElement("h2");h.textContent="This exam link is invalid";const p=document.createElement("p");
-      p.textContent="The exam data is missing, damaged, too large, or not supported. Ask the creator for a new link.";panel.append(h,p);$("studentContent").append(panel);return true;
+      const id = decodeURIComponent(hash.slice(7));
+
+      if (!/^[a-f0-9]{12}$/.test(id)) {
+        throw new Error("This exam-sharing link is invalid.");
+      }
+
+      const response = await fetch(
+        "https://pulseprep-shareable-exams-ai.ddangote701.workers.dev/share/" + id
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.exam) {
+        throw new Error(
+          data.error || "This exam was not found or may have expired."
+        );
+      }
+
+      studentExam = PulseExam.normalizeExam(data.exam);
+      answers = Array(studentExam.questions.length).fill(null);
+
+      restoreSession();
+      renderStudent();
+
+      if (deadline && !submitted) {
+        startTimer();
+      }
+
+      return true;
+    } catch (error) {
+      $("studentContent").replaceChildren();
+
+      const panel = document.createElement("div");
+      panel.className = "panel";
+
+      const heading = document.createElement("h2");
+      heading.textContent = "Unable to open this exam";
+
+      const paragraph = document.createElement("p");
+      paragraph.textContent =
+        error.message || "Please ask the exam creator for a new link.";
+
+      panel.append(heading, paragraph);
+      $("studentContent").append(panel);
+
+      return true;
     }
   }
-  function init() {
-    renderQuestions();
-    $("addQuestionBtn").onclick=addQuestion;$("emptyAddBtn").onclick=addQuestion;
-    $("newExamBtn").onclick=()=>{if(!confirm("Start a new exam? Save your current draft first if you want to keep it."))return;
-      $("examTitle").value="New Nursing Practice Exam";$("examSubject").value="";$("examTopic").value="";$("examDifficulty").value="Mixed";
-      $("examDuration").value="0";$("examInstructions").value="Choose the single best answer for each question.";$("examDescription").value="";
-      questions=[];editing=-1;renderQuestions();$("shareArea").hidden=true;message("New exam started.");};
-    $("saveDraftBtn").onclick=()=>{try{const raw=readMeta();if(questions.length)raw.questions=questions.map(PulseExam.normalizeQuestion);
-      localStorage.setItem(STORE,JSON.stringify(raw));message("Draft saved on this device and browser.");}
-      catch(error){message("Draft could not be saved: "+error.message,"error");}};
-    $("loadDraftBtn").onclick=()=>{try{const raw=localStorage.getItem(STORE);if(!raw){message("No saved draft was found in this browser.","warn");return;}
-      const exam=PulseExam.normalizeExam(JSON.parse(raw));if(!confirm("Load saved draft and replace the current builder content?"))return;setMeta(exam);message("Saved draft loaded.");}
-      catch(error){message("Saved draft could not be loaded: "+error.message,"error");}};
-    $("clearDraftBtn").onclick=()=>{if(!confirm("Permanently clear the saved draft from this browser?"))return;localStorage.removeItem(STORE);message("Saved draft cleared.");};
-    $("previewBtn").onclick=preview;$("backToBuilderBtn").onclick=()=>showView("builder");$("shareBtn").onclick=share;
-    $("copyLinkBtn").onclick=copyLink;$("exportBtn").onclick=exportJSON;$("downloadBtn").onclick=downloadStandalone;
-    $("importFile").onchange=event=>{const file=event.target.files[0];if(file)importJSON(file);event.target.value="";};
-    $("generateAiBtn").onclick=generateAI;
-    if(!parseSharedExam())showView("builder");
+
+  // Continue supporting older #exam= links.
+  if (!hash.startsWith("#exam=")) {
+    return false;
+  }
+
+  try {
+    const encoded = hash.slice(6);
+
+    if (encoded.length > 700000) {
+      throw new Error("The link is too large.");
+    }
+
+    const data = decodeURIComponent(escape(atob(encoded)));
+
+    studentExam = PulseExam.normalizeExam(JSON.parse(data));
+    answers = Array(studentExam.questions.length).fill(null);
+
+    restoreSession();
+    showView("student");
+    renderStudent();
+
+    if (deadline && !submitted) {
+      startTimer();
+    }
+
+    return true;
+  } catch {
+    showView("student");
+    $("studentContent").replaceChildren();
+
+    const panel = document.createElement("div");
+    panel.className = "panel";
+
+    const heading = document.createElement("h2");
+    heading.textContent = "This exam link is invalid";
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent =
+      "The exam data is missing, damaged, too large, or not supported. Ask the creator for a new link.";
+
+    panel.append(heading, paragraph);
+    $("studentContent").append(panel);
+
+    return true;
+  }
+}
   }
   init();
 })();
