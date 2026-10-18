@@ -180,25 +180,78 @@ let resultSyncMessage = "Result has not been sent yet.";
   function renderStudent() {
     const root=$("studentContent");root.replaceChildren();if(!studentExam)return;const exam=studentExam;
     if(!startedAt){
-      const hero=document.createElement("div");hero.className="student-hero";const h=document.createElement("h2");h.textContent=exam.title;hero.append(h);
-      const p=document.createElement("p");p.textContent=exam.subject+(exam.topic?" · "+exam.topic:"");hero.append(p);
-      const meta=document.createElement("div");meta.className="student-meta";
-      [exam.questions.length+" questions",exam.duration?exam.duration+" minute time limit":"No time limit",exam.difficulty].forEach(value=>{const tag=document.createElement("span");tag.className="pill";tag.textContent=value;meta.append(tag);});hero.append(meta);
-      const ins=document.createElement("p");ins.textContent=exam.instructions;hero.append(ins);
-      const warning=document.createElement("p");warning.textContent="Practice exam only. Answers are stored in this browser session; results are not sent to a teacher.";hero.append(warning);
-      const start=document.createElement("button");start.className="btn btn-primary";start.textContent="Start examination";start.addEventListener("click",()=>{startedAt=Date.now();deadline=exam.duration?startedAt+exam.duration*60000:0;saveSession();renderStudent();if(deadline)startTimer();});hero.append(start);root.append(hero);return;
+  const hero=document.createElement("div");
+  hero.className="student-hero";
+  const h=document.createElement("h2");
+  h.textContent=exam.title;
+  hero.append(h);
+  const p=document.createElement("p");
+  p.textContent=exam.subject+(exam.topic?" · "+exam.topic:"");
+  hero.append(p);
+  const meta=document.createElement("div");
+  meta.className="student-meta";
+  [exam.questions.length+" questions",exam.duration?exam.duration+" minute time limit":"No time limit",exam.difficulty].forEach(value=>{
+    const tag=document.createElement("span");
+    tag.className="pill";
+    tag.textContent=value;
+    meta.append(tag);
+  });
+  hero.append(meta);
+  const ins=document.createElement("p");
+  ins.textContent=exam.instructions;
+  hero.append(ins);
+  const nameLabel=document.createElement("label");
+  nameLabel.textContent="Student's full name";
+  nameLabel.htmlFor="studentNameInput";
+  nameLabel.style.display="block";
+  nameLabel.style.marginTop="16px";
+  const nameInput=document.createElement("input");
+  nameInput.type="text";
+  nameInput.id="studentNameInput";
+  nameInput.placeholder="Enter your full name";
+  nameInput.maxLength=100;
+  nameInput.autocomplete="name";
+  nameInput.value=studentName;
+  nameInput.required=true;
+  nameInput.style.display="block";
+  nameInput.style.width="100%";
+  nameInput.style.boxSizing="border-box";
+  nameInput.style.padding="12px";
+  nameInput.style.margin="8px 0 16px";
+  hero.append(nameLabel,nameInput);
+  const warning=document.createElement("p");
+  warning.textContent="Practice exam. Your result can be submitted for recording when you finish.";
+  hero.append(warning);
+  const start=document.createElement("button");
+  start.className="btn btn-primary";
+  start.textContent="Start examination";
+  start.addEventListener("click",()=>{
+    const name=nameInput.value.trim();
+    if(!name){
+      nameInput.focus();
+      nameInput.setCustomValidity("Please enter your full name before starting.");
+      nameInput.reportValidity();
+      return;
     }
-    if(submitted){renderResults(root);return;}
-    const q=exam.questions[current],panel=document.createElement("section");panel.className="panel";
-    const top=document.createElement("div");top.className="panel-title";const heading=document.createElement("h3");heading.textContent="Question "+(current+1)+" of "+exam.questions.length;top.append(heading);
-    if(deadline){const clock=document.createElement("strong");clock.id="timer";clock.textContent=timerText();clock.setAttribute("aria-label","Time remaining");top.append(clock);}panel.append(top);
-    const track=document.createElement("div");track.className="progress-track";const fill=document.createElement("div");fill.className="progress-fill";fill.style.width=((current+1)/exam.questions.length*100)+"%";track.append(fill);panel.append(track);
-    const questionText=document.createElement("div");questionText.className="exam-question";questionText.textContent=q.text;panel.append(questionText);
-    q.options.forEach((option,index)=>{const label=document.createElement("label");label.className="choice";const input=document.createElement("input");input.type="radio";input.name="studentAnswer";input.value=index;input.checked=answers[current]===index;input.setAttribute("aria-label","Option "+String.fromCharCode(65+index));input.addEventListener("change",()=>{answers[current]=index;saveSession();renderStudent();});const span=document.createElement("span");span.textContent=String.fromCharCode(65+index)+". "+option;label.append(input,span);panel.append(label);});
-    const jumps=document.createElement("div");jumps.className="question-jump";exam.questions.forEach((_,index)=>{const button=document.createElement("button");button.className="jump-btn"+(answers[index]!==null?" answered":"")+(index===current?" current":"");button.textContent=index+1;button.setAttribute("aria-label","Go to question "+(index+1)+(answers[index]===null?", unanswered":", answered"));button.addEventListener("click",()=>{current=index;renderStudent();});jumps.append(button);});panel.append(jumps);
-    const nav=document.createElement("div");nav.className="exam-nav";const prev=document.createElement("button");prev.className="btn btn-light";prev.textContent="← Previous";prev.disabled=current===0;prev.addEventListener("click",()=>{current--;renderStudent();});
-    const next=document.createElement("button");next.className="btn btn-primary";next.textContent=current===exam.questions.length-1?"Submit exam":"Next →";next.addEventListener("click",()=>{if(current===exam.questions.length-1){const unanswered=answers.filter(a=>a===null).length;if(!confirm("Submit this exam now? "+unanswered+" question(s) are unanswered."))return;submitExam(false);}else{current++;renderStudent();}});nav.append(prev,next);panel.append(nav);root.append(panel);
-  }
+    nameInput.setCustomValidity("");
+    studentName=name;
+    startedAt=Date.now();
+    deadline=exam.duration?startedAt+exam.duration*60000:0;
+    saveSession();
+    renderStudent();
+    if(deadline)startTimer();
+  });
+  nameInput.addEventListener("input",()=>{
+    nameInput.setCustomValidity("");
+  });
+  hero.append(start);
+  root.append(hero);
+  return;
+}
+if(submitted){
+  renderResults(root);
+  return;
+}
   function renderResults(root) {
     const exam=studentExam,score=PulseExam.mark(exam,answers),box=document.createElement("div");box.className="panel";
     const scoreBox=document.createElement("div");scoreBox.className="score-box";const title=document.createElement("h2");title.textContent="Your practice results";scoreBox.append(title);
