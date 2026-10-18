@@ -217,6 +217,101 @@
     restart.addEventListener("click",()=>{answers=Array(exam.questions.length).fill(null);current=0;startedAt=0;deadline=0;submitted=false;clearSession();renderStudent();});
     const printButton=document.createElement("button");printButton.className="btn btn-light";printButton.textContent="Print / Save PDF";printButton.addEventListener("click",()=>window.print());actions.append(restart,printButton);box.append(actions);root.append(box);
   }
+  async function generateAI() {
+  const button = $("generateAiBtn");
+  const status = $("aiStatus");
+
+  const subject = $("aiSubject").value.trim();
+  const topic = $("aiTopic").value.trim();
+  const count = Number($("aiCount").value);
+  const difficulty = $("aiDifficulty").value;
+  const style = $("aiStyle").value;
+  const explanationDepth = $("aiDepth").value;
+  const clinicalScenarios = $("aiClinical").checked;
+
+  if (!subject || !topic) {
+    message("Enter both a nursing subject and a topic.", "warn");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Generating questions...";
+  status.textContent = "Contacting the AI service. Please wait.";
+
+  try {
+    const response = await fetch(
+      "https://pulseprep-shareable-exams-ai.ddangote701.workers.dev/generate-questions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          subject,
+          topic,
+          count,
+          difficulty,
+          style,
+          explanationDepth,
+          clinicalScenarios
+        })
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "The AI service could not generate questions."
+      );
+    }
+
+    if (!Array.isArray(data.questions) || data.questions.length === 0) {
+      throw new Error("The AI service returned no valid questions.");
+    }
+
+    const generatedQuestions = data.questions.map(question =>
+      PulseExam.normalizeQuestion(question)
+    );
+
+    if (questions.length + generatedQuestions.length > 200) {
+      throw new Error(
+        "Your exam cannot contain more than 200 questions. Remove some questions first."
+      );
+    }
+
+    questions.push(...generatedQuestions);
+    editing = -1;
+
+    renderQuestions();
+
+    status.textContent =
+      `${generatedQuestions.length} questions generated successfully.`;
+
+    message(
+      `${generatedQuestions.length} AI-generated questions added. Review the questions and answers before using them.`
+    );
+
+    $("questionList").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  } catch (error) {
+    console.error("PulsePrep AI generation error:", error);
+
+    status.textContent = "Question generation failed.";
+
+    message(
+      error.message || "Unable to connect to the AI service.",
+      "error"
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Generate questions";
+  }
+}
     async function parseSharedExam() {
     const hash = location.hash;
 
