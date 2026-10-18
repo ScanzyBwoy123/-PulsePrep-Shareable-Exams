@@ -223,103 +223,376 @@ let resultSyncMessage = "Result has not been sent yet.";
   renderStudent();
 }
   function renderStudent() {
-    const root=$("studentContent");root.replaceChildren();if(!studentExam)return;const exam=studentExam;
-    if(!startedAt){
-  const hero=document.createElement("div");
-  hero.className="student-hero";
-  const h=document.createElement("h2");
-  h.textContent=exam.title;
-  hero.append(h);
-  const p=document.createElement("p");
-  p.textContent=exam.subject+(exam.topic?" · "+exam.topic:"");
-  hero.append(p);
-  const meta=document.createElement("div");
-  meta.className="student-meta";
-  [exam.questions.length+" questions",exam.duration?exam.duration+" minute time limit":"No time limit",exam.difficulty].forEach(value=>{
-    const tag=document.createElement("span");
-    tag.className="pill";
-    tag.textContent=value;
-    meta.append(tag);
-  });
-  hero.append(meta);
-  const ins=document.createElement("p");
-  ins.textContent=exam.instructions;
-  hero.append(ins);
-  const nameLabel=document.createElement("label");
-  nameLabel.textContent="Student's full name";
-  nameLabel.htmlFor="studentNameInput";
-  nameLabel.style.display="block";
-  nameLabel.style.marginTop="16px";
-  const nameInput=document.createElement("input");
-  nameInput.type="text";
-  nameInput.id="studentNameInput";
-  nameInput.placeholder="Enter your full name";
-  nameInput.maxLength=100;
-  nameInput.autocomplete="name";
-  nameInput.value=studentName;
-  nameInput.required=true;
-  nameInput.style.display="block";
-  nameInput.style.width="100%";
-  nameInput.style.boxSizing="border-box";
-  nameInput.style.padding="12px";
-  nameInput.style.margin="8px 0 16px";
-  hero.append(nameLabel,nameInput);
-  const warning=document.createElement("p");
-  warning.textContent="Practice exam. Your result can be submitted for recording when you finish.";
-  hero.append(warning);
-  const start=document.createElement("button");
-  start.className="btn btn-primary";
-  start.textContent="Start examination";
-  start.addEventListener("click",()=>{
-    const name=nameInput.value.trim();
-    if(!name){
-      nameInput.focus();
-      nameInput.setCustomValidity("Please enter your full name before starting.");
-      nameInput.reportValidity();
-      return;
-    }
-    nameInput.setCustomValidity("");
-    studentName=name;
-    startedAt=Date.now();
-    deadline=exam.duration?startedAt+exam.duration*60000:0;
-    saveSession();
-    renderStudent();
-    if(deadline)startTimer();
-  });
-  nameInput.addEventListener("input",()=>{
-    nameInput.setCustomValidity("");
-  });
-  hero.append(start);
-  root.append(hero);
-  return;
-}
-if(submitted){
-  renderResults(root);
-  return;
-}
-  function renderResults(root) {
-    const exam=studentExam,score=PulseExam.mark(exam,answers),box=document.createElement("div");box.className="panel";
-    const scoreBox=document.createElement("div");scoreBox.className="score-box";const title=document.createElement("h2");title.textContent="Your practice results";scoreBox.append(title);
-    const number=document.createElement("div");number.className="score-number";number.textContent=score.percentage+"%";scoreBox.append(number);
-    const summary=document.createElement("p");summary.textContent=score.correct+" correct out of "+score.total+" · "+score.grade;scoreBox.append(summary);
-    const stats=document.createElement("p");stats.textContent="Answered: "+score.answered+" · Correct: "+score.correct+" · Incorrect: "+score.incorrect+" · Unanswered: "+score.unanswered;scoreBox.append(stats);
-    const note=document.createElement("p");
-note.className="muted";
-note.textContent=resultSyncMessage;
-scoreBox.append(note);
-    const reviewTitle=document.createElement("h2");reviewTitle.textContent="Answer review";box.append(reviewTitle);
-    exam.questions.forEach((q,index)=>{const isEmpty=answers[index]===null,isCorrect=answers[index]===q.correct,item=document.createElement("article");
-      item.className="review-item "+(isEmpty?"unanswered":isCorrect?"correct":"incorrect");const h=document.createElement("h3");h.textContent=(index+1)+". "+q.text;item.append(h);
-      const feedback=document.createElement("p");feedback.className="feedback "+(isEmpty?"":isCorrect?"good":"bad");feedback.textContent=isEmpty?"Unanswered":isCorrect?"Correct":"Incorrect";item.append(feedback);
-      const yourAnswer=document.createElement("p");yourAnswer.textContent="Your answer: "+(isEmpty?"No answer":String.fromCharCode(65+answers[index])+". "+q.options[answers[index]]);item.append(yourAnswer);
-      const correctAnswer=document.createElement("p");correctAnswer.textContent="Correct answer: "+String.fromCharCode(65+q.correct)+". "+q.options[q.correct];item.append(correctAnswer);
-      if(q.explanation){const explanation=document.createElement("p");explanation.textContent="Explanation: "+q.explanation;item.append(explanation);}
-      if(q.reference){const reference=document.createElement("p");reference.className="muted";reference.textContent="Reference: "+q.reference;item.append(reference);}box.append(item);
+  const root = $("studentContent");
+  root.replaceChildren();
+
+  if (!studentExam) return;
+
+  const exam = studentExam;
+
+  // Student introduction and name entry
+  if (!startedAt) {
+    const hero = document.createElement("div");
+    hero.className = "student-hero";
+
+    const title = document.createElement("h2");
+    title.textContent = exam.title;
+    hero.append(title);
+
+    const subject = document.createElement("p");
+    subject.textContent =
+      exam.subject + (exam.topic ? " · " + exam.topic : "");
+    hero.append(subject);
+
+    const meta = document.createElement("div");
+    meta.className = "student-meta";
+
+    [
+      exam.questions.length + " questions",
+      exam.duration
+        ? exam.duration + " minute time limit"
+        : "No time limit",
+      exam.difficulty
+    ].forEach(value => {
+      const tag = document.createElement("span");
+      tag.className = "pill";
+      tag.textContent = value;
+      meta.append(tag);
     });
-    const actions=document.createElement("div");actions.className="exam-nav no-print";const restart=document.createElement("button");restart.className="btn btn-primary";restart.textContent="Restart practice";
-    restart.addEventListener("click",()=>{answers=Array(exam.questions.length).fill(null);current=0;startedAt=0;deadline=0;submitted=false;clearSession();renderStudent();});
-    const printButton=document.createElement("button");printButton.className="btn btn-light";printButton.textContent="Print / Save PDF";printButton.addEventListener("click",()=>window.print());actions.append(restart,printButton);box.append(actions);root.append(box);
+
+    hero.append(meta);
+
+    const instructions = document.createElement("p");
+    instructions.textContent = exam.instructions || "Answer all questions.";
+    hero.append(instructions);
+
+    const nameLabel = document.createElement("label");
+    nameLabel.textContent = "Student's full name";
+    nameLabel.htmlFor = "studentNameInput";
+    nameLabel.style.display = "block";
+    nameLabel.style.marginTop = "16px";
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.id = "studentNameInput";
+    nameInput.placeholder = "Enter your full name";
+    nameInput.maxLength = 100;
+    nameInput.autocomplete = "name";
+    nameInput.value = studentName;
+    nameInput.required = true;
+    nameInput.style.display = "block";
+    nameInput.style.width = "100%";
+    nameInput.style.boxSizing = "border-box";
+    nameInput.style.padding = "12px";
+    nameInput.style.margin = "8px 0 16px";
+
+    hero.append(nameLabel, nameInput);
+
+    const warning = document.createElement("p");
+    warning.textContent =
+      "Enter your name before starting. Your result will be recorded when you finish.";
+    hero.append(warning);
+
+    const startButton = document.createElement("button");
+    startButton.className = "btn btn-primary";
+    startButton.textContent = "Start examination";
+
+    startButton.addEventListener("click", () => {
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        nameInput.setCustomValidity(
+          "Please enter your full name before starting."
+        );
+        nameInput.reportValidity();
+        nameInput.focus();
+        return;
+      }
+
+      nameInput.setCustomValidity("");
+      studentName = name;
+      startedAt = Date.now();
+      deadline = exam.duration
+        ? startedAt + exam.duration * 60000
+        : 0;
+
+      saveSession();
+      renderStudent();
+
+      if (deadline) startTimer();
+    });
+
+    nameInput.addEventListener("input", () => {
+      nameInput.setCustomValidity("");
+    });
+
+    hero.append(startButton);
+    root.append(hero);
+    return;
   }
+
+  // Display results after submission
+  if (submitted) {
+    renderResults(root);
+    return;
+  }
+
+  // Active examination screen
+  const question = exam.questions[current];
+
+  if (!question) {
+    root.textContent = "No question is available.";
+    return;
+  }
+
+  const panel = document.createElement("div");
+  panel.className = "panel";
+
+  const heading = document.createElement("h2");
+  heading.textContent = exam.title;
+  panel.append(heading);
+
+  const progress = document.createElement("p");
+  progress.className = "muted";
+  progress.textContent =
+    "Question " + (current + 1) + " of " + exam.questions.length;
+  panel.append(progress);
+
+  if (deadline) {
+    const timerLabel = document.createElement("p");
+    timerLabel.id = "timer";
+    timerLabel.className = "pill";
+    timerLabel.textContent = timerText();
+    panel.append(timerLabel);
+  }
+
+  const questionText = document.createElement("h3");
+  questionText.textContent =
+    (current + 1) + ". " + question.text;
+  panel.append(questionText);
+
+  const optionsBox = document.createElement("div");
+  optionsBox.className = "question-options";
+
+  question.options.forEach((option, index) => {
+    const label = document.createElement("label");
+    label.style.display = "block";
+    label.style.padding = "12px";
+    label.style.margin = "8px 0";
+    label.style.cursor = "pointer";
+
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "examAnswer";
+    radio.value = String(index);
+    radio.checked = answers[current] === index;
+
+    radio.addEventListener("change", () => {
+      answers[current] = index;
+      saveSession();
+
+      optionsBox.querySelectorAll("label").forEach(item => {
+        item.style.fontWeight = "normal";
+      });
+
+      label.style.fontWeight = "bold";
+    });
+
+    label.append(radio, document.createTextNode(" " + option));
+
+    if (radio.checked) {
+      label.style.fontWeight = "bold";
+    }
+
+    optionsBox.append(label);
+  });
+
+  panel.append(optionsBox);
+
+  const navigation = document.createElement("div");
+  navigation.className = "exam-nav no-print";
+  navigation.style.display = "flex";
+  navigation.style.flexWrap = "wrap";
+  navigation.style.gap = "10px";
+  navigation.style.marginTop = "20px";
+
+  if (current > 0) {
+    const previousButton = document.createElement("button");
+    previousButton.className = "btn btn-light";
+    previousButton.textContent = "Previous";
+
+    previousButton.addEventListener("click", () => {
+      current--;
+      saveSession();
+      renderStudent();
+    });
+
+    navigation.append(previousButton);
+  }
+
+  if (current < exam.questions.length - 1) {
+    const nextButton = document.createElement("button");
+    nextButton.className = "btn btn-primary";
+    nextButton.textContent = "Next question";
+
+    nextButton.addEventListener("click", () => {
+      current++;
+      saveSession();
+      renderStudent();
+    });
+
+    navigation.append(nextButton);
+  }
+
+  const submitButton = document.createElement("button");
+  submitButton.className = "btn btn-primary";
+  submitButton.textContent = "Submit examination";
+
+  submitButton.addEventListener("click", () => {
+    const unanswered = answers.filter(
+      answer => answer === null || answer === undefined
+    ).length;
+
+    const confirmMessage = unanswered > 0
+      ? "You have " + unanswered +
+        " unanswered question(s). Are you sure you want to submit?"
+      : "Are you sure you want to submit your examination?";
+
+    if (window.confirm(confirmMessage)) {
+      submitExam(false);
+    }
+  });
+
+  navigation.append(submitButton);
+  panel.append(navigation);
+  root.append(panel);
+}
+
+function renderResults(root) {
+  const exam = studentExam;
+  const score = PulseExam.mark(exam, answers);
+
+  const box = document.createElement("div");
+  box.className = "panel";
+
+  const scoreBox = document.createElement("div");
+  scoreBox.className = "score-box";
+
+  const title = document.createElement("h2");
+  title.textContent = "Your practice results";
+  scoreBox.append(title);
+
+  const number = document.createElement("div");
+  number.className = "score-number";
+  number.textContent = score.percentage + "%";
+  scoreBox.append(number);
+
+  const summary = document.createElement("p");
+  summary.textContent =
+    score.correct + " correct out of " +
+    score.total + " · " + score.grade;
+  scoreBox.append(summary);
+
+  const stats = document.createElement("p");
+  stats.textContent =
+    "Answered: " + score.answered +
+    " · Correct: " + score.correct +
+    " · Incorrect: " + score.incorrect +
+    " · Unanswered: " + score.unanswered;
+  scoreBox.append(stats);
+
+  const note = document.createElement("p");
+  note.className = "muted";
+  note.textContent = resultSyncMessage;
+  scoreBox.append(note);
+
+  box.append(scoreBox);
+
+  const reviewTitle = document.createElement("h2");
+  reviewTitle.textContent = "Answer review";
+  box.append(reviewTitle);
+
+  exam.questions.forEach((question, index) => {
+    const answer = answers[index];
+    const isEmpty = answer === null || answer === undefined;
+    const isCorrect = !isEmpty && answer === question.correct;
+
+    const item = document.createElement("article");
+    item.className =
+      "review-item " +
+      (isEmpty ? "unanswered" : isCorrect ? "correct" : "incorrect");
+
+    const heading = document.createElement("h3");
+    heading.textContent = (index + 1) + ". " + question.text;
+    item.append(heading);
+
+    const feedback = document.createElement("p");
+    feedback.className =
+      "feedback " + (isEmpty ? "" : isCorrect ? "good" : "bad");
+    feedback.textContent =
+      isEmpty ? "Unanswered" : isCorrect ? "Correct" : "Incorrect";
+    item.append(feedback);
+
+    const yourAnswer = document.createElement("p");
+    yourAnswer.textContent = isEmpty
+      ? "Your answer: No answer"
+      : "Your answer: " + String.fromCharCode(65 + answer) +
+        ". " + question.options[answer];
+    item.append(yourAnswer);
+
+    const correctAnswer = document.createElement("p");
+    correctAnswer.textContent =
+      "Correct answer: " +
+      String.fromCharCode(65 + question.correct) +
+      ". " + question.options[question.correct];
+    item.append(correctAnswer);
+
+    if (question.explanation) {
+      const explanation = document.createElement("p");
+      explanation.textContent =
+        "Explanation: " + question.explanation;
+      item.append(explanation);
+    }
+
+    if (question.reference) {
+      const reference = document.createElement("p");
+      reference.className = "muted";
+      reference.textContent = "Reference: " + question.reference;
+      item.append(reference);
+    }
+
+    box.append(item);
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "exam-nav no-print";
+
+  const restart = document.createElement("button");
+  restart.className = "btn btn-primary";
+  restart.textContent = "Restart practice";
+
+  restart.addEventListener("click", () => {
+    answers = Array(exam.questions.length).fill(null);
+    current = 0;
+    startedAt = 0;
+    deadline = 0;
+    submitted = false;
+    studentName = "";
+    resultSyncMessage = "Result has not been sent yet.";
+    clearInterval(timer);
+    clearSession();
+    renderStudent();
+  });
+
+  const printButton = document.createElement("button");
+  printButton.className = "btn btn-light";
+  printButton.textContent = "Print / Save PDF";
+  printButton.addEventListener("click", () => window.print());
+
+  actions.append(restart, printButton);
+  box.append(actions);
+  root.append(box);
+}
   async function generateAI() {
   const button = $("generateAiBtn");
   const status = $("aiStatus");
