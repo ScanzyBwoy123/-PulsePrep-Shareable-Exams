@@ -303,7 +303,10 @@ if(submitted){
     const number=document.createElement("div");number.className="score-number";number.textContent=score.percentage+"%";scoreBox.append(number);
     const summary=document.createElement("p");summary.textContent=score.correct+" correct out of "+score.total+" · "+score.grade;scoreBox.append(summary);
     const stats=document.createElement("p");stats.textContent="Answered: "+score.answered+" · Correct: "+score.correct+" · Incorrect: "+score.incorrect+" · Unanswered: "+score.unanswered;scoreBox.append(stats);
-    const note=document.createElement("p");note.className="muted";note.textContent="Practice score only. This result is not centrally stored or officially verified.";scoreBox.append(note);box.append(scoreBox);
+    const note=document.createElement("p");
+note.className="muted";
+note.textContent=resultSyncMessage;
+scoreBox.append(note);
     const reviewTitle=document.createElement("h2");reviewTitle.textContent="Answer review";box.append(reviewTitle);
     exam.questions.forEach((q,index)=>{const isEmpty=answers[index]===null,isCorrect=answers[index]===q.correct,item=document.createElement("article");
       item.className="review-item "+(isEmpty?"unanswered":isCorrect?"correct":"incorrect");const h=document.createElement("h3");h.textContent=(index+1)+". "+q.text;item.append(h);
