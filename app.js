@@ -176,7 +176,52 @@ let resultSyncMessage = "Result has not been sent yet.";
   }
   function timerText(){const seconds=Math.max(0,Math.ceil((deadline-Date.now())/1000));return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");}
   function startTimer(){clearInterval(timer);if(!deadline||submitted)return;timer=setInterval(()=>{if(Date.now()>=deadline){clearInterval(timer);submitExam(true);return;}const node=$("timer");if(node)node.textContent=timerText();},1000);}
-  function submitExam(auto=false){if(submitted)return;submitted=true;clearInterval(timer);saveSession();renderStudent();if(auto)message("Time expired. Your answers were submitted automatically.","warn");}
+  async function submitExam(auto=false){
+  if(submitted)return;
+  submitted=true;
+  clearInterval(timer);
+  saveSession();
+  renderStudent();
+  if(auto){
+    message("Time expired. Your answers were submitted automatically.","warn");
+  }
+  const match=location.hash.match(/^#share=([a-f0-9]{12})$/i);
+  if(!match){
+    resultSyncMessage="This exam was not opened through a valid share link. The result was not sent to the teacher.";
+    renderStudent();
+    return;
+  }
+  if(!studentName.trim()){
+    resultSyncMessage="The student's name is missing. The result could not be submitted.";
+    renderStudent();
+    return;
+  }
+  resultSyncMessage="Sending your result...";
+  try{
+    const response=await fetch(
+      "https://pulseprep-shareable-exams-ai.ddangote701.workers.dev/submit-result",
+      {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          examId:match[1],
+          studentName:studentName.trim(),
+          answers:answers
+        })
+      }
+    );
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok){
+      throw new Error(data.error||"The server could not save your result.");
+    }
+    resultSyncMessage="Result saved successfully. Score: "+
+      data.score+"/"+data.totalQuestions+" ("+data.percentage+"%).";
+  }catch(error){
+    resultSyncMessage="Result submission failed: "+error.message+
+      ". Your result may still be available on this device.";
+  }
+  renderStudent();
+}
   function renderStudent() {
     const root=$("studentContent");root.replaceChildren();if(!studentExam)return;const exam=studentExam;
     if(!startedAt){
