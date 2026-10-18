@@ -3,6 +3,8 @@
   const $ = id => document.getElementById(id);
   const STORE = "pulseprep-shareable-exams-draft-v1";
   let questions = [], editing = -1, studentExam = null, answers = [], current = 0;
+  let studentName = "";
+let resultSyncMessage = "Result has not been sent yet.";
   let startedAt = 0, deadline = 0, timer = null, submitted = false;
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
