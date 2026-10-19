@@ -17,3 +17,55 @@ footer{text-align:center;background:white;border-top:1px solid var(--line);paddi
 @media(max-width:800px){.workspace{grid-template-columns:1fr}.hero{padding:27px 24px}.hero-art{margin-right:18px;width:115px;height:115px;font-size:48px}.shell{padding:18px 14px 35px}.panel{padding:18px}.section-heading{align-items:flex-start}.section-heading h2{font-size:24px}}
 @media(max-width:520px){.topbar{min-height:66px;padding:10px 14px}.brand strong{font-size:15px}.practice-tag{font-size:10px;padding:6px 8px}.hero{min-height:auto;padding:25px 20px}.hero-art{display:none}.hero h1{font-size:33px}.section-heading{flex-direction:column}.section-heading>.btn{width:100%}.panel-title{align-items:flex-start;flex-direction:column}.panel-title>.btn{width:100%}.options-grid,.action-grid,.ai-fields{grid-template-columns:1fr}.question-head{align-items:flex-start;flex-direction:column}.exam-nav .btn{flex:1}.student-hero{padding:20px}.exam-question{font-size:17px}}
 @media print{.topbar,footer,.no-print,.exam-nav,.question-jump{display:none!important}body{background:white}.shell{max-width:none;padding:0}.panel,.student-hero{box-shadow:none;break-inside:avoid}.student-hero{background:white;color:black;border:1px solid #ddd}.student-hero p{color:#333}}
+/* Make submitted exam results easy to identify */
+
+.review-item.correct {
+background: #eaf8ef;
+border: 1px solid #b8e4c7;
+border-left: 6px solid #16834a;
+border-radius: 12px;
+padding: 17px 16px;
+margin: 12px 0;
+}
+
+.review-item.incorrect {
+background: #fff0f0;
+border: 1px solid #f0c5c7;
+border-left: 6px solid #c0393d;
+border-radius: 12px;
+padding: 17px 16px;
+margin: 12px 0;
+}
+
+.review-item.unanswered {
+background: #fff7e8;
+border: 1px solid #f0ddb0;
+border-left: 6px solid #c17b16;
+border-radius: 12px;
+padding: 17px 16px;
+margin: 12px 0;
+}
+
+.review-item.correct .feedback.good {
+display: inline-block;
+background: #d1f2dc;
+color: #116638;
+padding: 5px 10px;
+border-radius: 7px;
+}
+
+.review-item.incorrect .feedback.bad {
+display: inline-block;
+background: #ffdada;
+color: #a51f29;
+padding: 5px 10px;
+border-radius: 7px;
+}
+
+.review-item.unanswered .feedback {
+display: inline-block;
+background: #ffedc7;
+color: #7a4b08;
+padding: 5px 10px;
+border-radius: 7px;
+}
